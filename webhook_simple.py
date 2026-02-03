@@ -54,42 +54,73 @@ def webhook():
         # 记录所有收到的请求
         logger.info("=" * 60)
         logger.info("收到Webhook请求")
-        logger.info(f"请求类型: {data.get('type')}")
-        logger.info(f"完整数据: {json.dumps(data, ensure_ascii=False)}")
-        logger.info("=" * 60)
         
-        # URL验证（首次配置）
-        if data.get('type') == 'url_verification':
-            challenge = data.get('challenge')
-            logger.info(f"URL验证: {challenge}")
-            return jsonify({"challenge": challenge})
+        # 判断是v1.0还是v2.0格式
+        schema = data.get('schema', '1.0')
         
-        # Token验证
-        token = os.environ.get('VERIFICATION_TOKEN', 'your_verification_token')
-        if token != 'your_verification_token' and data.get('token') != token:
-            logger.warning(f"Token验证失败: 期望={token}, 实际={data.get('token')}")
-            return jsonify({"error": "invalid token"}), 401
-        
-        # 处理事件
-        if data.get('type') == 'event_callback':
-            event = data.get('event', {})
-            event_type = event.get('type')
+        if schema == '2.0':
+            # v2.0格式
+            header = data.get('header', {})
+            event_type = header.get('event_type')
+            token = header.get('token')
             
+            logger.info(f"Schema: 2.0")
             logger.info(f"事件类型: {event_type}")
+            logger.info(f"完整数据: {json.dumps(data, ensure_ascii=False)}")
+            logger.info("=" * 60)
             
-            # 支持多个事件类型
-            if event_type in ['bitable.app_table_record.changed', 
-                             'bitable.app_table_field.changed',
-                             'drive.file.bitable_field_changed_v1',
-                             'drive.file.bitable_record_changed_v1',
-                             'bitable_app_table_record_changed',
-                             'bitable_app_table_field_changed']:
-                logger.info("收到多维表格变更事件")
-                handle_record_change(event)
+            # 处理事件
+            if event_type in ['drive.file.bitable_record_changed_v1',
+                             'drive.file.bitable_field_changed_v1']:
+                logger.info("收到多维表格变更事件 (v2.0)")
+                event_data = data.get('event', {})
+                handle_record_change(event_data)
             else:
                 logger.info(f"未处理的事件类型: {event_type}")
+            
+            # v2.0需要返回空JSON
+            return jsonify({})
         
-        return jsonify({"code": 0, "msg": "success"})
+        else:
+            # v1.0格式
+            request_type = data.get('type')
+            logger.info(f"Schema: 1.0")
+            logger.info(f"请求类型: {request_type}")
+            logger.info(f"完整数据: {json.dumps(data, ensure_ascii=False)}")
+            logger.info("=" * 60)
+            
+            # URL验证（首次配置）
+            if request_type == 'url_verification':
+                challenge = data.get('challenge')
+                logger.info(f"URL验证: {challenge}")
+                return jsonify({"challenge": challenge})
+            
+            # Token验证
+            token = os.environ.get('VERIFICATION_TOKEN', 'your_verification_token')
+            if token != 'your_verification_token' and data.get('token') != token:
+                logger.warning(f"Token验证失败: 期望={token}, 实际={data.get('token')}")
+                return jsonify({"error": "invalid token"}), 401
+            
+            # 处理事件
+            if request_type == 'event_callback':
+                event = data.get('event', {})
+                event_type = event.get('type')
+                
+                logger.info(f"事件类型: {event_type}")
+                
+                # 支持多个事件类型
+                if event_type in ['bitable.app_table_record.changed', 
+                                 'bitable.app_table_field.changed',
+                                 'drive.file.bitable_field_changed_v1',
+                                 'drive.file.bitable_record_changed_v1',
+                                 'bitable_app_table_record_changed',
+                                 'bitable_app_table_field_changed']:
+                    logger.info("收到多维表格变更事件 (v1.0)")
+                    handle_record_change(event)
+                else:
+                    logger.info(f"未处理的事件类型: {event_type}")
+            
+            return jsonify({"code": 0, "msg": "success"})
     
     except Exception as e:
         logger.error(f"Webhook错误: {e}", exc_info=True)
