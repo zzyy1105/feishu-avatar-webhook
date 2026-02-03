@@ -21,9 +21,9 @@ with open('config.json', 'r', encoding='utf-8') as f:
 # 初始化飞书API
 api = FeishuAPI(config['app_id'], config['app_secret'])
 
-# Webhook配置
-VERIFICATION_TOKEN = "your_verification_token"
-ENCRYPT_KEY = "your_encrypt_key"
+# Webhook配置 - 从环境变量读取
+VERIFICATION_TOKEN = os.environ.get('VERIFICATION_TOKEN', 'your_verification_token')
+ENCRYPT_KEY = os.environ.get('ENCRYPT_KEY', 'your_encrypt_key')
 
 # 已处理记录缓存（避免重复处理）
 processed_records = set()
@@ -263,12 +263,12 @@ def force_check():
 # 初始化
 load_processed_cache()
 
-# 创建定时任务调度器
+# 创建定时任务调度器（减少worker数量）
 scheduler = BackgroundScheduler()
 scheduler.add_job(
     func=check_and_update,
     trigger="interval",
-    minutes=5,  # 每5分钟检查一次
+    minutes=10,  # 改为每10分钟检查一次，减少资源占用
     id='check_update_job',
     name='定时检查多维表格',
     replace_existing=True
