@@ -249,7 +249,7 @@ def health():
         "status": "ok",
         "timestamp": datetime.now().isoformat(),
         "processed_count": len(processed_records),
-        "mode": "hybrid (webhook + polling)"
+        "mode": "webhook only (polling disabled to save memory)"
     })
 
 
@@ -263,20 +263,21 @@ def force_check():
 # 初始化
 load_processed_cache()
 
-# 创建定时任务调度器（减少worker数量）
-scheduler = BackgroundScheduler()
-scheduler.add_job(
-    func=check_and_update,
-    trigger="interval",
-    minutes=10,  # 改为每10分钟检查一次，减少资源占用
-    id='check_update_job',
-    name='定时检查多维表格',
-    replace_existing=True
-)
-scheduler.start()
+# 禁用定时任务调度器以节省内存（只使用Webhook模式）
+# 如果需要启用轮询，取消下面的注释
+# scheduler = BackgroundScheduler()
+# scheduler.add_job(
+#     func=check_and_update,
+#     trigger="interval",
+#     minutes=10,
+#     id='check_update_job',
+#     name='定时检查多维表格',
+#     replace_existing=True
+# )
+# scheduler.start()
 
 logger.info("=" * 60)
-logger.info("飞书群头像自动更新服务启动（混合模式）")
+logger.info("飞书群头像自动更新服务启动（Webhook模式）")
 logger.info("模式: Webhook实时响应 + 5分钟定时轮询")
 logger.info("=" * 60)
 

@@ -8,7 +8,7 @@ services:
     region: singapore  # 选择离中国较近的区域
     plan: free  # 免费计划
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn -w 1 -b 0.0.0.0:$PORT --timeout 120 --max-requests 1000 --max-requests-jitter 50 webhook_server_hybrid:app
+    startCommand: gunicorn -w 1 --threads 2 -b 0.0.0.0:$PORT --timeout 120 --worker-class gthread --worker-tmp-dir /dev/shm webhook_lite:app
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.0
