@@ -132,18 +132,19 @@ def webhook():
     """接收飞书Webhook事件"""
     try:
         data = request.get_json()
-        logger.info(f"[Webhook] 收到请求")
+        logger.info(f"[Webhook] 收到请求: {data.get('type')}")
         
-        # 验证Token
-        if data.get('token') != VERIFICATION_TOKEN:
-            logger.warning("[Webhook] Token验证失败")
-            return jsonify({"error": "invalid token"}), 401
-        
-        # URL验证
+        # URL验证（首次配置时，不验证token）
         if data.get('type') == 'url_verification':
             challenge = data.get('challenge')
             logger.info(f"[Webhook] URL验证: {challenge}")
             return jsonify({"challenge": challenge})
+        
+        # 其他请求验证Token
+        token = os.environ.get('VERIFICATION_TOKEN', VERIFICATION_TOKEN)
+        if token != 'your_verification_token' and data.get('token') != token:
+            logger.warning(f"[Webhook] Token验证失败: 期望={token}, 实际={data.get('token')}")
+            return jsonify({"error": "invalid token"}), 401
         
         # 处理事件
         if data.get('type') == 'event_callback':
