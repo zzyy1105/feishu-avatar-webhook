@@ -181,11 +181,23 @@ def update_avatar(chat_id):
 @app.route('/health', methods=['GET'])
 def health():
     """健康检查"""
+    import psutil
+    import os
+    
+    # 获取当前进程
+    process = psutil.Process(os.getpid())
+    memory_info = process.memory_info()
+    
     return jsonify({
         "status": "ok",
         "timestamp": datetime.now().isoformat(),
         "mode": "webhook-only",
-        "initialized": config is not None and api is not None
+        "initialized": config is not None and api is not None,
+        "memory": {
+            "rss_mb": round(memory_info.rss / 1024 / 1024, 2),  # 实际物理内存
+            "vms_mb": round(memory_info.vms / 1024 / 1024, 2),  # 虚拟内存
+            "percent": round(process.memory_percent(), 2)
+        }
     })
 
 
