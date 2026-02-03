@@ -51,6 +51,13 @@ def webhook():
     try:
         data = request.get_json()
         
+        # 记录所有收到的请求
+        logger.info("=" * 60)
+        logger.info("收到Webhook请求")
+        logger.info(f"请求类型: {data.get('type')}")
+        logger.info(f"完整数据: {json.dumps(data, ensure_ascii=False)}")
+        logger.info("=" * 60)
+        
         # URL验证（首次配置）
         if data.get('type') == 'url_verification':
             challenge = data.get('challenge')
@@ -60,7 +67,7 @@ def webhook():
         # Token验证
         token = os.environ.get('VERIFICATION_TOKEN', 'your_verification_token')
         if token != 'your_verification_token' and data.get('token') != token:
-            logger.warning("Token验证失败")
+            logger.warning(f"Token验证失败: 期望={token}, 实际={data.get('token')}")
             return jsonify({"error": "invalid token"}), 401
         
         # 处理事件
@@ -68,14 +75,18 @@ def webhook():
             event = data.get('event', {})
             event_type = event.get('type')
             
+            logger.info(f"事件类型: {event_type}")
+            
             if event_type == 'bitable.app_table_record.changed':
                 logger.info("收到记录变更事件")
                 handle_record_change(event)
+            else:
+                logger.info(f"未处理的事件类型: {event_type}")
         
         return jsonify({"code": 0, "msg": "success"})
     
     except Exception as e:
-        logger.error(f"Webhook错误: {e}")
+        logger.error(f"Webhook错误: {e}", exc_info=True)
         return jsonify({"error": str(e)}), 500
 
 
