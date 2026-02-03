@@ -103,13 +103,18 @@ def handle_record_change(event):
             logger.error("服务未初始化")
             return
         
-        app_token = event.get('app_token')
-        table_id = event.get('table_id')
-        record_id = event.get('record_id')
+        # v2.0事件的数据在object字段中
+        event_data = event.get('object', event)
+        
+        app_token = event_data.get('app_token')
+        table_id = event_data.get('table_id')
+        record_id = event_data.get('record_id')
+        
+        logger.info(f"事件数据: app_token={app_token}, table_id={table_id}, record_id={record_id}")
         
         # 检查是否是目标表格
         if app_token != config['base_config']['app_token']:
-            logger.info("非目标表格，忽略")
+            logger.info(f"非目标表格，忽略 (期望: {config['base_config']['app_token']}, 实际: {app_token})")
             return
         
         logger.info(f"处理记录: {record_id}")
