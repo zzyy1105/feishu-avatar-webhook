@@ -80,6 +80,8 @@ def webhook():
             # 支持多个事件类型
             if event_type in ['bitable.app_table_record.changed', 
                              'bitable.app_table_field.changed',
+                             'drive.file.bitable_field_changed_v1',
+                             'drive.file.bitable_record_changed_v1',
                              'bitable_app_table_record_changed',
                              'bitable_app_table_field_changed']:
                 logger.info("收到多维表格变更事件")
