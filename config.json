@@ -1,0 +1,16 @@
+{
+  "app_id": "cli_a9fc7a617dbadcb0",
+  "app_secret": "AkNYoHW5SMux5O5yEwQGSAQ6uPwEnKEw",
+  "base_config": {
+    "app_token": "FbU2bnPIPawHQvsIMudcANvwnWf",
+    "table_id": "tblp5MrI71tKK7wq",
+    "monitor_field": "发机通道申请状态",
+    "target_value": "已通过",
+    "chat_id_field": "群组",
+    "avatar_path": "avatar.jpg"
+  },
+  "monitor_config": {
+    "check_interval": 30,
+    "log_level": "INFO"
+  }
+}

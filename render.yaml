@@ -1,0 +1,14 @@
+# Render.com 部署配置
+# 在 Render 创建 Web Service 时使用此配置
+
+services:
+  - type: web
+    name: feishu-avatar-webhook
+    env: python
+    region: singapore  # 选择离中国较近的区域
+    plan: free  # 免费计划
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 4 -b 0.0.0.0:$PORT --timeout 120 webhook_server_hybrid:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0

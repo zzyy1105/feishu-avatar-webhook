@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  feishu-webhook:
+    build: .
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logs:/app/logs
+      - ./config.json:/app/config.json
+      - ./avatar.jpg:/app/avatar.jpg
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
