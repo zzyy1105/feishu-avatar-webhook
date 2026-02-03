@@ -6,7 +6,7 @@
     "table_id": "tblp5MrI71tKK7wq",
     "monitor_field": "发机通道申请状态",
     "target_value": "已通过",
-    "chat_id_field": "飞书项目群",
+    "chat_id_field": "chat id",
     "avatar_path": "avatar.jpg"
   },
   "monitor_config": {
