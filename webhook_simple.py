@@ -77,8 +77,12 @@ def webhook():
             
             logger.info(f"事件类型: {event_type}")
             
-            if event_type == 'bitable.app_table_record.changed':
-                logger.info("收到记录变更事件")
+            # 支持多个事件类型
+            if event_type in ['bitable.app_table_record.changed', 
+                             'bitable.app_table_field.changed',
+                             'bitable_app_table_record_changed',
+                             'bitable_app_table_field_changed']:
+                logger.info("收到多维表格变更事件")
                 handle_record_change(event)
             else:
                 logger.info(f"未处理的事件类型: {event_type}")
@@ -220,9 +224,35 @@ def index():
         "mode": "webhook-only",
         "endpoints": {
             "health": "/health",
-            "webhook": "/webhook"
+            "webhook": "/webhook",
+            "test": "/test-webhook"
         }
     })
+def test_webhook():
+    """测试Webhook功能"""
+    logger.info("=" * 60)
+    logger.info("手动测试Webhook")
+    logger.info("=" * 60)
+    
+    # 模拟一个事件
+    test_event = {
+        "type": "event_callback",
+        "event": {
+            "type": "bitable.app_table_record.changed",
+            "app_token": config['base_config']['app_token'],
+            "table_id": config['base_config']['table_id'],
+            "record_id": "test_record_id"
+        }
+    }
+    
+    logger.info(f"模拟事件: {json.dumps(test_event, ensure_ascii=False)}")
+    
+    try:
+        handle_record_change(test_event['event'])
+        return jsonify({"status": "ok", "msg": "测试完成，查看日志"})
+    except Exception as e:
+        logger.error(f"测试失败: {e}", exc_info=True)
+        return jsonify({"status": "error", "msg": str(e)}), 500
 
 
 # 启动时初始化
