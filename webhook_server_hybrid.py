@@ -253,11 +253,11 @@ def health():
     })
 
 
-@app.route('/force-check', methods=['POST'])
+@app.route('/force-check', methods=['GET', 'POST'])
 def force_check():
     """手动触发检查"""
     check_and_update()
-    return jsonify({"msg": "检查已触发"})
+    return jsonify({"msg": "检查已触发", "status": "ok"})
 
 
 # 初始化
