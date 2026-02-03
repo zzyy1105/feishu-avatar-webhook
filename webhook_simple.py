@@ -145,23 +145,14 @@ def handle_record_change(event):
         
         # 检查是否是目标表格
         if app_token != config['base_config']['app_token']:
-            logger.info(f"非目标表格，忽略 (期望: {config['base_config']['app_token']}, 实际: {app_token})")
+            logger.info(f"非目标表格，忽略")
             return
         
         logger.info(f"处理记录: {record_id}")
         
-        # 获取记录详情
-        records = api.get_table_records(app_token, table_id)
-        target_record = None
-        
-        for record in records:
-            if record['record_id'] == record_id:
-                target_record = record
-                break
-        
-        if not target_record:
-            logger.warning(f"未找到记录: {record_id}")
-            return
+        # 直接获取单条记录，而不是获取所有记录（节省内存）
+        # 注意：这里简化处理，直接从事件中获取信息
+        # 如果需要完整记录数据，可以调用单条记录API
         
         # 获取字段映射
         field_list = api.get_field_list(app_token, table_id)
@@ -172,6 +163,25 @@ def handle_record_change(event):
         
         if not monitor_field_id or not chat_id_field_id:
             logger.error("未找到必要字段")
+            return
+        
+        # 获取单条记录（而不是所有记录）
+        try:
+            url = f"https://open.feishu.cn/open-apis/bitable/v1/apps/{app_token}/tables/{table_id}/records/{record_id}"
+            headers = {"Authorization": f"Bearer {api.get_tenant_access_token()}"}
+            
+            import requests
+            response = requests.get(url, headers=headers)
+            result = response.json()
+            
+            if result.get('code') != 0:
+                logger.error(f"获取记录失败: {result}")
+                return
+            
+            target_record = result.get('data', {}).get('record', {})
+            
+        except Exception as e:
+            logger.error(f"获取记录异常: {e}")
             return
         
         # 获取字段值
@@ -189,6 +199,8 @@ def handle_record_change(event):
             chat_id = chat_id[0].get('text', '')
         elif isinstance(chat_id, dict):
             chat_id = chat_id.get('text', '')
+        elif isinstance(chat_id, str):
+            chat_id = chat_id.strip()
         
         logger.info(f"状态={status}, 群组={chat_id}")
         
